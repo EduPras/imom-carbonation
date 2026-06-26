@@ -46,7 +46,7 @@ class DataLoader:
             self._display_stats("X_train", X_train_tensor)
             self._display_stats("y_train", y_train_tensor)
             self._display_stats("X_test", X_test_tensor)
-            self._display_stats("y_test", X_train_tensor)
+            self._display_stats("y_test", y_test_tensor)
 
             return [X_train_tensor, y_train_tensor, X_test_tensor, y_test_tensor]
         except Exception as e:
