@@ -18,6 +18,8 @@ dependencies = [
     "lightgbm>=4.6.0",
     "catboost>=1.2.10",
     "pytorch-tabnet>=4.1.0",
+    "streamlit>=1.59.1",
+    "joblib>=1.5.3",
 ]
 
 [tool.uv.sources]

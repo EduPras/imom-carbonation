@@ -1,10 +1,12 @@
 import torch
 import numpy as np
 import optuna
+from pathlib import Path
 from loguru import logger
 from pytorch_tabnet.tab_model import TabNetRegressor
 from sklearn.metrics import mean_squared_error
 from .base_model import BaseModel
+
 
 
 class TabNetModel(BaseModel):
@@ -95,3 +97,9 @@ class TabNetModel(BaseModel):
 
     def reset(self) -> None:
         self.model = None
+
+    def save(self, path: Path) -> None:
+        if self.model is None:
+            raise ValueError("Model has not been trained yet.")
+        self.model.save_model(str(path))
+

@@ -1,10 +1,13 @@
 import torch
 import numpy as np
 import optuna
+import joblib
+from pathlib import Path
 from loguru import logger
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error
 from .base_model import BaseModel
+
 
 
 class RidgeModel(BaseModel):
@@ -61,3 +64,9 @@ class RidgeModel(BaseModel):
 
     def reset(self) -> None:
         self.model = None
+
+    def save(self, path: Path) -> None:
+        if self.model is None:
+            raise ValueError("Model has not been trained yet.")
+        joblib.dump(self.model, path.with_suffix('.joblib'))
+

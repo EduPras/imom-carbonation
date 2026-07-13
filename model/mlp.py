@@ -179,3 +179,9 @@ class MLPModel(BaseModel):
             self.optimizer, mode="min", factor=0.5, patience=15
         )
 
+    def save(self, path: Path) -> None:
+        torch.save({
+            "model_state_dict": self.model.state_dict(),
+        }, path.with_suffix('.pth'))
+
+

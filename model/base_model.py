@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import torch
 import numpy as np
 from typing import Union
+from pathlib import Path
+
 
 
 class BaseModel(ABC):
@@ -30,4 +32,10 @@ class BaseModel(ABC):
     def reset(self) -> None:
         """Resets the model state for a new training session (e.g. new fold)."""
         pass
+
+    @abstractmethod
+    def save(self, path: Path) -> None:
+        """Saves the model state to the specified path."""
+        pass
+
 

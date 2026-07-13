@@ -2,12 +2,14 @@ from pathlib import Path
 from loguru import logger
 import torch
 import numpy as np
+import joblib
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 
 from .loader import DataLoader
 from .base_model import BaseModel
+
 
 
 def to_numpy(data) -> np.ndarray:
@@ -79,6 +81,16 @@ class TrainingOrchestrator:
             # Train model
             model.train(X_train_tensor, y_train_tensor, X_test_tensor, y_test_tensor)
 
+            # Save model and scalers for this fold
+            scalers_dir = Path("checkpoints") / "scalers"
+            scalers_dir.mkdir(parents=True, exist_ok=True)
+            joblib.dump(scaler_X, scalers_dir / f"fold_{fold + 1}_X.pkl")
+            joblib.dump(scaler_y, scalers_dir / f"fold_{fold + 1}_y.pkl")
+
+            model_dir = Path("checkpoints") / model_name
+            model_dir.mkdir(parents=True, exist_ok=True)
+            model.save(model_dir / f"fold_{fold + 1}")
+
             # Predict
             preds = model.predict(X_test_tensor)
 
@@ -108,4 +120,5 @@ class TrainingOrchestrator:
             f"  - MAE: {mean_mae:.4f} +/- {std_mae:.4f}\n"
             f"  - R2:  {mean_r2:.4f} +/- {std_r2:.4f}"
         )
+
 
