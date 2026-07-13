@@ -25,3 +25,9 @@ class BaseModel(ABC):
     def get_name(self) -> str:
         """Returns the model name."""
         pass
+
+    @abstractmethod
+    def reset(self) -> None:
+        """Resets the model state for a new training session (e.g. new fold)."""
+        pass
+

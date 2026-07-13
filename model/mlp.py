@@ -39,6 +39,7 @@ class MLPModel(BaseModel):
         patience: int = 50,
         checkpoint_dir: str = "checkpoints",
         epochs: int = 500,
+        seed: int = 42,
     ) -> None:
         self.device = torch.device(
             "cuda"
@@ -46,6 +47,13 @@ class MLPModel(BaseModel):
             else ("mps" if torch.backends.mps.is_available() else "cpu")
         )
         logger.info(f"Initializing MLP on device: {self.device}")
+        
+        # Set seeds for reproducibility
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+        np.random.seed(seed)
+        self.seed = seed
 
         self.model = ConcretePredictor().to(self.device)
         self.criterion = nn.MSELoss()
@@ -155,3 +163,19 @@ class MLPModel(BaseModel):
 
     def get_name(self) -> str:
         return "MLP"
+
+    def reset(self) -> None:
+        # Set seeds for reproducibility
+        torch.manual_seed(self.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(self.seed)
+        np.random.seed(self.seed)
+
+        self.model = ConcretePredictor().to(self.device)
+        self.optimizer = optim.Adam(
+            self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay
+        )
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            self.optimizer, mode="min", factor=0.5, patience=15
+        )
+

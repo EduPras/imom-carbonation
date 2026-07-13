@@ -65,3 +65,7 @@ class RFModel(BaseModel):
 
     def get_name(self) -> str:
         return "Random Forest"
+
+    def reset(self) -> None:
+        self.model = None
+

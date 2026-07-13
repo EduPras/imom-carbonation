@@ -15,6 +15,9 @@ dependencies = [
     "xgboost>=3.2.0",
     "torch",
     "loguru>=0.7.3",
+    "lightgbm>=4.6.0",
+    "catboost>=1.2.10",
+    "pytorch-tabnet>=4.1.0",
 ]
 
 [tool.uv.sources]

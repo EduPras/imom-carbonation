@@ -2,12 +2,12 @@ import torch
 import numpy as np
 import optuna
 from loguru import logger
-from xgboost import XGBRegressor
+from catboost import CatBoostRegressor
 from sklearn.metrics import mean_squared_error
 from .base_model import BaseModel
 
 
-class XGBModel(BaseModel):
+class CatBoostModel(BaseModel):
     def __init__(self, seed: int = 42, n_trials: int = 20):
         self.seed = seed
         self.n_trials = n_trials
@@ -15,15 +15,17 @@ class XGBModel(BaseModel):
         self.model = None
 
     def _objective(self, trial, X_train, y_train, X_test, y_test):
-        n_estimators = trial.suggest_int("n_estimators", 50, 300)
-        max_depth = trial.suggest_int("max_depth", 3, 10)
+        iterations = trial.suggest_int("iterations", 50, 300)
+        depth = trial.suggest_int("depth", 3, 10)
         learning_rate = trial.suggest_float("learning_rate", 1e-3, 0.3, log=True)
 
-        model = XGBRegressor(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
+        model = CatBoostRegressor(
+            iterations=iterations,
+            depth=depth,
             learning_rate=learning_rate,
-            random_state=self.seed,
+            loss_function="MultiRMSE",
+            random_seed=self.seed,
+            verbose=False,
         )
         model.fit(X_train, y_train)
         preds = model.predict(X_test)
@@ -42,7 +44,7 @@ class XGBModel(BaseModel):
         X_test_np = X_test.numpy()
         y_test_np = y_test.numpy()
 
-        logger.info("Starting Optuna tuning for XGBoost...")
+        logger.info("Starting Optuna tuning for CatBoost...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(direction="minimize")
         study.optimize(
@@ -53,9 +55,15 @@ class XGBModel(BaseModel):
         )
 
         self.best_params = study.best_params
-        logger.info(f"Best XGB Params: {self.best_params}")
+        logger.info(f"Best CatBoost Params: {self.best_params}")
 
-        self.model = XGBRegressor(**self.best_params, random_state=self.seed)
+        self.model = CatBoostRegressor(
+            **self.best_params,
+            loss_function="MultiRMSE",
+            random_seed=self.seed,
+            verbose=False,
+        )
+
         self.model.fit(X_train_np, y_train_np)
 
     def predict(self, X: torch.FloatTensor) -> np.ndarray:
@@ -64,8 +72,7 @@ class XGBModel(BaseModel):
         return self.model.predict(X.numpy())
 
     def get_name(self) -> str:
-        return "XGBoost"
+        return "CatBoost"
 
     def reset(self) -> None:
         self.model = None
-
