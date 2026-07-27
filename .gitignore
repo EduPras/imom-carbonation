@@ -13,4 +13,8 @@ mlruns/
 database/
 checkpoints/
 *.csv
-*.db 
+*.db
+catboost_info
+*.txt
+*.tex
+.agents/

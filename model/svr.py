@@ -58,6 +58,14 @@ class SVRModel(BaseModel):
         base_model = SVR(**self.best_params, kernel="rbf")
         self.model = MultiOutputRegressor(base_model)
         self.model.fit(X_train_np, y_train_np)
+        
+        train_preds = self.model.predict(X_train_np)
+        test_preds = self.model.predict(X_test_np)
+        from sklearn.metrics import mean_squared_error
+        return {
+            "train_loss": [float(mean_squared_error(y_train_np, train_preds))],
+            "val_loss": [float(mean_squared_error(y_test_np, test_preds))]
+        }
 
     def predict(self, X: torch.FloatTensor) -> np.ndarray:
         if self.model is None:

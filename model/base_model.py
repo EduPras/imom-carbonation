@@ -14,8 +14,8 @@ class BaseModel(ABC):
         y_train: torch.FloatTensor,
         X_test: torch.FloatTensor,
         y_test: torch.FloatTensor,
-    ) -> None:
-        """Trains the model using the provided data."""
+    ) -> dict:
+        """Trains the model using the provided data and returns a history of metrics."""
         pass
 
     @abstractmethod

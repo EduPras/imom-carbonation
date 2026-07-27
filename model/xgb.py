@@ -59,7 +59,15 @@ class XGBModel(BaseModel):
         logger.info(f"Best XGB Params: {self.best_params}")
 
         self.model = XGBRegressor(**self.best_params, random_state=self.seed)
-        self.model.fit(X_train_np, y_train_np)
+        self.model.fit(X_train_np, y_train_np, eval_set=[(X_train_np, y_train_np), (X_test_np, y_test_np)], verbose=False)
+        results = self.model.evals_result()
+        try:
+            return {
+                "train_loss": list(results["validation_0"].values())[0],
+                "val_loss": list(results["validation_1"].values())[0]
+            }
+        except Exception:
+            return {"train_loss": [], "val_loss": []}
 
     def predict(self, X: torch.FloatTensor) -> np.ndarray:
         if self.model is None:

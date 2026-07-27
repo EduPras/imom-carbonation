@@ -81,11 +81,16 @@ class TabNetModel(BaseModel):
         self.model.fit(
             X_train_np,
             y_train_np,
-            eval_set=[(X_test_np, y_test_np)],
+            eval_set=[(X_train_np, y_train_np), (X_test_np, y_test_np)],
+            eval_name=["train", "val"],
             eval_metric=["mse"],
             max_epochs=150,
             patience=25,
         )
+        return {
+            "train_loss": self.model.history["train_mse"],
+            "val_loss": self.model.history["val_mse"]
+        }
 
     def predict(self, X: torch.FloatTensor) -> np.ndarray:
         if self.model is None:

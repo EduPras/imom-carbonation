@@ -89,6 +89,8 @@ class MLPModel(BaseModel):
         patience_counter = 0
 
         logger.info("Starting MLP training loop...")
+        
+        history = {"train_loss": [], "val_loss": []}
 
         for epoch in range(self.epochs):
             self.model.train()
@@ -107,6 +109,9 @@ class MLPModel(BaseModel):
             with torch.no_grad():
                 val_preds = self.model(X_test)
                 val_loss = self.criterion(val_preds, y_test)
+                
+            history["train_loss"].append(float(loss.item()))
+            history["val_loss"].append(float(val_loss.item()))
 
             self.scheduler.step(val_loss)
 
@@ -153,6 +158,7 @@ class MLPModel(BaseModel):
             ]
         )
         self.model.eval()
+        return history
 
     def predict(self, X: torch.FloatTensor) -> np.ndarray:
         self.model.eval()

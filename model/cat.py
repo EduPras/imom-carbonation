@@ -67,7 +67,15 @@ class CatBoostModel(BaseModel):
             verbose=False,
         )
 
-        self.model.fit(X_train_np, y_train_np)
+        self.model.fit(X_train_np, y_train_np, eval_set=[(X_test_np, y_test_np)], verbose=False)
+        results = self.model.get_evals_result()
+        try:
+            return {
+                "train_loss": list(results["learn"].values())[0],
+                "val_loss": list(results["validation"].values())[0]
+            }
+        except Exception:
+            return {"train_loss": [], "val_loss": []}
 
     def predict(self, X: torch.FloatTensor) -> np.ndarray:
         if self.model is None:
