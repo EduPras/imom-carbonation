@@ -9,6 +9,34 @@
 
 ---
 
+<details open>
+<summary><b>Table of Contents / Sumário</b> (Click to expand/collapse)</summary>
+
+- [Motivation](#motivation)
+- [Dataset](#dataset)
+  - [Input Features (9 Variables)](#input-features-9-variables)
+  - [Target Variable](#target-variable)
+- [Machine Learning Models](#machine-learning-models)
+  - [Performance Comparison (9-Variable Model)](#performance-comparison-9-variable-model)
+- [SHAP Interpretability](#shap-interpretability)
+  - [Global Feature Importance (XGBoost)](#global-feature-importance-xgboost)
+- [Interactive Web Application](#interactive-web-application)
+  - [Features](#features)
+- [Project Architecture](#project-architecture)
+- [Installation & Usage](#installation--usage)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Training](#training)
+  - [Running the Web Application](#running-the-web-application)
+  - [Generating Publication Figures](#generating-publication-figures)
+- [Tech Stack](#tech-stack)
+- [References](#references)
+- [Acknowledgments](#acknowledgments)
+
+</details>
+
+---
+
 ## Motivation
 
 The construction industry generates up to 35% of municipal solid waste, while mining operations produce over 10 billion tons of tailings annually. Crushing construction and demolition waste (CDW) into **Recycled Concrete Aggregates (RCA)** enables a circular economy approach, but introduces a critical durability concern: **concrete carbonation**.
