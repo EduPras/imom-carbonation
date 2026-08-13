@@ -7,9 +7,10 @@ from sklearn.preprocessing import StandardScaler
 
 
 class DataLoader:
-    def __init__(self, csv_path: Path, seed: int = 42) -> None:
+    def __init__(self, csv_path: Path, seed: int = 42, drop_features: list[str] | None = None) -> None:
         self.path: Path = csv_path
         self.seed: int = seed
+        self.drop_features = drop_features or []
 
         self.data = self._load_csv()
 
@@ -60,8 +61,8 @@ class DataLoader:
             df = df.iloc[:, 1:]
             logger.debug(f"CSV info: {df.shape} (data points, columns)")
 
-            X = df.iloc[:, :-2]
-            Y = df.iloc[:, -2:]
+            X = df.drop(columns=["Carbonation depth"] + self.drop_features)
+            Y = df[["Carbonation depth"]]
 
             logger.debug(f"X columns: {X.columns}")
             logger.debug(f"Y columns: {Y.columns}")

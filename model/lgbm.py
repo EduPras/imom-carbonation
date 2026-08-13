@@ -5,7 +5,6 @@ import joblib
 from pathlib import Path
 from loguru import logger
 from lightgbm import LGBMRegressor
-from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error
 from .base_model import BaseModel
 
@@ -32,8 +31,8 @@ class LGBMModel(BaseModel):
             random_state=self.seed,
             verbosity=-1,
         )
-        model = MultiOutputRegressor(base_model)
-        model.fit(X_train, y_train)
+        model = base_model
+        model.fit(X_train, y_train.ravel())
         preds = model.predict(X_test)
         mse = mean_squared_error(y_test, preds)
         return mse
@@ -66,8 +65,8 @@ class LGBMModel(BaseModel):
         base_model = LGBMRegressor(
             **self.best_params, random_state=self.seed, verbosity=-1
         )
-        self.model = MultiOutputRegressor(base_model)
-        self.model.fit(X_train_np, y_train_np)
+        self.model = base_model
+        self.model.fit(X_train_np, y_train_np.ravel())
         
         train_preds = self.model.predict(X_train_np)
         test_preds = self.model.predict(X_test_np)

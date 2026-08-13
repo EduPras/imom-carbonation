@@ -29,11 +29,12 @@ def log_metrics(
 
 
 class TrainingOrchestrator:
-    def __init__(self, filepath: Path, seed: int = 42, n_splits: int = 5):
+    def __init__(self, filepath: Path, seed: int = 42, n_splits: int = 5, checkpoints_dir: str = "checkpoints", drop_features: list[str] | None = None):
         self.filepath = filepath
         self.seed = seed
         self.n_splits = n_splits
-        self.data_loader = DataLoader(csv_path=filepath, seed=seed)
+        self.checkpoints_dir = Path(checkpoints_dir)
+        self.data_loader = DataLoader(csv_path=filepath, seed=seed, drop_features=drop_features)
 
         # Retrieve raw X and y from DataLoader
         if self.data_loader.data is None:
@@ -88,12 +89,12 @@ class TrainingOrchestrator:
             history = model.train(X_train_tensor, y_train_tensor, X_test_tensor, y_test_tensor)
 
             # Save model and scalers for this fold
-            scalers_dir = Path("checkpoints") / "scalers"
+            scalers_dir = self.checkpoints_dir / "scalers"
             scalers_dir.mkdir(parents=True, exist_ok=True)
             joblib.dump(scaler_X, scalers_dir / f"fold_{fold + 1}_X.pkl")
             joblib.dump(scaler_y, scalers_dir / f"fold_{fold + 1}_y.pkl")
 
-            model_dir = Path("checkpoints") / model_name
+            model_dir = self.checkpoints_dir / model_name
             model_dir.mkdir(parents=True, exist_ok=True)
             model.save(model_dir / f"fold_{fold + 1}")
             
@@ -127,21 +128,22 @@ class TrainingOrchestrator:
                     raw_model = model.model
                     
                     if hasattr(raw_model, "estimators_"):
-                        # MultiOutputRegressor wrapper (used in LightGBM)
-                        shap_outputs = []
-                        for estimator in raw_model.estimators_:
-                            explainer = shap.TreeExplainer(estimator)
-                            shap_outputs.append(explainer.shap_values(X_test_scaled))
-                        shap_val = np.stack(shap_outputs, axis=-1)
+                        # Should not happen anymore, but just in case
+                        estimator = raw_model.estimators_[0]
+                        explainer = shap.TreeExplainer(estimator)
+                        shap_val = explainer.shap_values(X_test_scaled)
+                        if isinstance(shap_val, list):
+                            shap_val = shap_val[0]
+                        shap_val = np.expand_dims(shap_val, axis=-1)
                     else:
-                        # Direct multi-output or single-output tree models
+                        # Direct single-output tree models
                         explainer = shap.TreeExplainer(raw_model)
                         shap_val = explainer.shap_values(X_test_scaled)
                         
-                        # Normalize shapes: ensure it is 3D (num_samples, num_features, num_outputs)
+                        # Normalize shapes: ensure it is 3D (num_samples, num_features, 1)
                         if isinstance(shap_val, list):
-                            shap_val = np.stack(shap_val, axis=-1)
-                        elif len(shap_val.shape) == 2:
+                            shap_val = shap_val[0]
+                        if len(shap_val.shape) == 2:
                             shap_val = np.expand_dims(shap_val, axis=-1)
                     
                     fold_shap.append(shap_val)

@@ -20,7 +20,6 @@ from presentation.tabs import (
     render_performance_tab,
     render_predictions_tab,
     render_shap_tab,
-    render_optimization_tab,
 )
 
 # Initialize Page Config & Styles
@@ -29,11 +28,14 @@ init_session_state()
 
 # Cache model predictors loading
 @st.cache_resource
-def load_predictors():
-    return get_all_predictors(Path("checkpoints"))
+def load_predictors(mode: str):
+    if mode == "9 Variables (All)":
+        return get_all_predictors(Path("checkpoints_9var"))
+    else:
+        return get_all_predictors(Path("checkpoints_7var"))
 
 try:
-    predictors = load_predictors()
+    predictors = load_predictors(st.session_state["feature_mode"])
 except Exception as e:
     st.error(
         "### ⚠️ No trained model checkpoints found!\n"
@@ -92,27 +94,25 @@ else:
         )
     else:
         # Main Navigation Tabs (Text instead of icons)
-        tab_predict, tab_performance, tab_learning, tab_shap, tab_opt = st.tabs(
+        tab_predict, tab_performance, tab_learning, tab_shap = st.tabs(
             [
                 "Interactive Predictions",
                 "Model Performance",
                 "Learning Curves",
                 "SHAP Interpretability",
-                "Monte Carlo Simulation",
             ]
         )
 
+        checkpoints_dir = Path("checkpoints_9var") if st.session_state["feature_mode"] == "9 Variables (All)" else Path("checkpoints_7var")
+
         with tab_predict:
-            render_predictions_tab(predictors, input_data)
+            render_predictions_tab(predictors, input_data, checkpoints_dir)
 
         with tab_performance:
             render_performance_tab()
 
         with tab_learning:
-            render_learning_tab()
+            render_learning_tab(checkpoints_dir)
 
         with tab_shap:
-            render_shap_tab()
-
-        with tab_opt:
-            render_optimization_tab(predictors, input_data)
+            render_shap_tab(checkpoints_dir)

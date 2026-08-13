@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import joblib
 from pathlib import Path
-from sklearn.multioutput import MultiOutputRegressor
 
 from .base_predictor import BasePredictor
 from .mlp import ConcretePredictor
@@ -44,6 +43,8 @@ class GeneralPredictor(BasePredictor):
         for model, scaler_x, scaler_y in self.folds:
             X_scaled = scaler_x.transform(X)
             y_pred_scaled = model.predict(X_scaled)
+            if y_pred_scaled.ndim == 1:
+                y_pred_scaled = y_pred_scaled.reshape(-1, 1)
             y_pred = scaler_y.inverse_transform(y_pred_scaled)
             preds.append(y_pred)
 
@@ -71,13 +72,14 @@ class MLPPredictor(BasePredictor):
             scaler_x_path = scalers_dir / f"fold_{i}_X.pkl"
             scaler_y_path = scalers_dir / f"fold_{i}_y.pkl"
 
-            model = ConcretePredictor().to(self.device)
+            scaler_x = joblib.load(scaler_x_path)
+            scaler_y = joblib.load(scaler_y_path)
+
+            input_dim = scaler_x.n_features_in_
+            model = ConcretePredictor(input_dim=input_dim).to(self.device)
             checkpoint = torch.load(model_path, map_location=self.device, weights_only=True)
             model.load_state_dict(checkpoint["model_state_dict"])
             model.eval()
-
-            scaler_x = joblib.load(scaler_x_path)
-            scaler_y = joblib.load(scaler_y_path)
 
             self.folds.append((model, scaler_x, scaler_y))
 
@@ -137,6 +139,8 @@ class TabNetPredictor(BasePredictor):
         for model, scaler_x, scaler_y in self.folds:
             X_scaled = scaler_x.transform(X)
             y_pred_scaled = model.predict(X_scaled)
+            if y_pred_scaled.ndim == 1:
+                y_pred_scaled = y_pred_scaled.reshape(-1, 1)
             y_pred = scaler_y.inverse_transform(y_pred_scaled)
             preds.append(y_pred)
 

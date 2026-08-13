@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 
-def render_learning_tab(checkpoints_dir: Path = Path("checkpoints")) -> None:
+def render_learning_tab(checkpoints_dir: Path = Path("checkpoints_9var")) -> None:
     """Render Learning Curves tab component."""
     st.markdown("### 📉 Learning Curves")
     st.markdown(

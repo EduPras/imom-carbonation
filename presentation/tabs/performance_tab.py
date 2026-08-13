@@ -9,7 +9,8 @@ def render_performance_tab() -> None:
     """Render 5-Fold CV Performance summary tab."""
     st.markdown("### 📊 5-Fold Cross-Validation Performance Summary")
     st.markdown(
-        "Below are the performance statistics compiled across all 5 folds. Tree-based ensemble models perform exceptionally well on this tabular dataset."
+        "Below are the performance statistics compiled across all 5 folds **for the 9-Variable models**. "
+        "Tree-based ensemble models perform exceptionally well on this tabular dataset."
     )
 
     performance_data = {

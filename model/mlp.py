@@ -8,15 +8,15 @@ import numpy as np
 
 
 class ConcretePredictor(nn.Module):
-    def __init__(self):
+    def __init__(self, input_dim: int = 9):
         super(ConcretePredictor, self).__init__()
 
-        # Input layer: 8 features -> 32 neurons
-        self.fc1 = nn.Linear(8, 32)
+        # Input layer: input_dim features -> 32 neurons
+        self.fc1 = nn.Linear(input_dim, 32)
         # Hidden layer: 32 neurons -> 16 neurons
         self.fc2 = nn.Linear(32, 16)
-        # Output layer: 16 neurons -> 2 targets
-        self.fc3 = nn.Linear(16, 2)
+        # Output layer: 16 neurons -> 1 target
+        self.fc3 = nn.Linear(16, 1)
 
         # Activation and Regularization
         self.relu = nn.ReLU()
@@ -40,6 +40,7 @@ class MLPModel(BaseModel):
         checkpoint_dir: str = "checkpoints",
         epochs: int = 500,
         seed: int = 42,
+        input_dim: int = 9,
     ) -> None:
         self.device = torch.device(
             "cuda"
@@ -54,8 +55,9 @@ class MLPModel(BaseModel):
             torch.cuda.manual_seed_all(seed)
         np.random.seed(seed)
         self.seed = seed
+        self.input_dim = input_dim
 
-        self.model = ConcretePredictor().to(self.device)
+        self.model = ConcretePredictor(input_dim=self.input_dim).to(self.device)
         self.criterion = nn.MSELoss()
 
         self.lr = lr
@@ -177,7 +179,7 @@ class MLPModel(BaseModel):
             torch.cuda.manual_seed_all(self.seed)
         np.random.seed(self.seed)
 
-        self.model = ConcretePredictor().to(self.device)
+        self.model = ConcretePredictor(input_dim=self.input_dim).to(self.device)
         self.optimizer = optim.Adam(
             self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay
         )

@@ -5,7 +5,6 @@ import joblib
 from pathlib import Path
 from loguru import logger
 from sklearn.svm import SVR
-from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error
 from .base_model import BaseModel
 
@@ -24,8 +23,8 @@ class SVRModel(BaseModel):
         gamma = trial.suggest_float("gamma", 1e-4, 1.0, log=True)
 
         base_model = SVR(C=C, epsilon=epsilon, gamma=gamma, kernel="rbf")
-        model = MultiOutputRegressor(base_model)
-        model.fit(X_train, y_train)
+        model = base_model
+        model.fit(X_train, y_train.ravel())
         preds = model.predict(X_test)
         mse = mean_squared_error(y_test, preds)
         return mse
@@ -56,8 +55,8 @@ class SVRModel(BaseModel):
         logger.info(f"Best SVR Params: {self.best_params}")
 
         base_model = SVR(**self.best_params, kernel="rbf")
-        self.model = MultiOutputRegressor(base_model)
-        self.model.fit(X_train_np, y_train_np)
+        self.model = base_model
+        self.model.fit(X_train_np, y_train_np.ravel())
         
         train_preds = self.model.predict(X_train_np)
         test_preds = self.model.predict(X_test_np)

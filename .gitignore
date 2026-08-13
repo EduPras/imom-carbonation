@@ -18,3 +18,4 @@ catboost_info
 *.txt
 *.tex
 .agents/
+checkpoints*/

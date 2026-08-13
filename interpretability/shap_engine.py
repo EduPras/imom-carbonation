@@ -8,15 +8,13 @@ import shap
 
 def get_waterfall_data(
     model_name: str,
-    target_idx: int,
     X_input: np.ndarray,
-    checkpoints_dir: Path = Path("checkpoints"),
+    checkpoints_dir: Path = Path("checkpoints_9var"),
 ) -> tuple[float, np.ndarray]:
     """Calculate single-instance SHAP values in target physical units.
 
     Args:
         model_name: Name of the tree-based model (e.g. 'XGBoost', 'LightGBM').
-        target_idx: Index of target output (0 for Carbonation, 1 for Strength).
         X_input: Array of shape (1, num_features) with feature values.
         checkpoints_dir: Path to checkpoints directory.
 
@@ -37,44 +35,44 @@ def get_waterfall_data(
     raw_model = getattr(model, "model", model)
 
     if hasattr(raw_model, "estimators_"):
-        estimator = raw_model.estimators_[target_idx]
+        estimator = raw_model.estimators_[0]
         explainer = shap.TreeExplainer(estimator)
         sv = explainer.shap_values(X_scaled)
         base_val_scaled = explainer.expected_value
         if isinstance(base_val_scaled, (np.ndarray, list)):
             base_val_scaled = base_val_scaled[0]
-        shap_real = sv[0] * scaler_y.scale_[target_idx]
+        shap_real = sv[0] * scaler_y.scale_[0]
         base_val_real = (
-            base_val_scaled * scaler_y.scale_[target_idx]
-            + scaler_y.mean_[target_idx]
+            base_val_scaled * scaler_y.scale_[0]
+            + scaler_y.mean_[0]
         )
     else:
         explainer = shap.TreeExplainer(raw_model)
         sv = explainer.shap_values(X_scaled)
         if isinstance(sv, list):
-            shap_real = sv[target_idx][0] * scaler_y.scale_[target_idx]
-            base_val = explainer.expected_value[target_idx]
-        elif len(sv.shape) == 3:
-            shap_real = sv[0, :, target_idx] * scaler_y.scale_[target_idx]
-            base_val = (
-                explainer.expected_value[target_idx]
-                if isinstance(explainer.expected_value, (list, np.ndarray))
-                else explainer.expected_value
-            )
+            # For some multi-class or older SHAP versions
+            sv = sv[0]
+            
+        # sv is expected to be shape (n_samples, n_features) or (n_samples, n_features, 1)
+        if len(sv.shape) == 3:
+            shap_real = sv[0, :, 0] * scaler_y.scale_[0]
         else:
-            shap_real = sv[0] * scaler_y.scale_[target_idx]
-            base_val = explainer.expected_value
+            shap_real = sv[0] * scaler_y.scale_[0]
+            
+        base_val = explainer.expected_value
+        if isinstance(base_val, (list, np.ndarray)):
+            base_val = base_val[0]
 
         base_val_real = (
-            base_val * scaler_y.scale_[target_idx]
-            + scaler_y.mean_[target_idx]
+            base_val * scaler_y.scale_[0]
+            + scaler_y.mean_[0]
         )
 
     return float(base_val_real), shap_real
 
 
 def load_global_shap_data(
-    model_name: str, checkpoints_dir: Path = Path("checkpoints")
+    model_name: str, checkpoints_dir: Path = Path("checkpoints_9var")
 ) -> dict | None:
     """Load out-of-fold global SHAP dataset pickle file.
 

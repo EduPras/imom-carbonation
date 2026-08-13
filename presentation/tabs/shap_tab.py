@@ -4,7 +4,9 @@ import streamlit as st
 from interpretability.visualizer import render_global_shap_plots
 
 
-def render_shap_tab() -> None:
+from pathlib import Path
+
+def render_shap_tab(checkpoints_dir: Path) -> None:
     """Render global SHAP Interpretability tab."""
     st.markdown("### SHAP Global Interpretability Analysis")
     st.markdown(
@@ -19,11 +21,4 @@ def render_shap_tab() -> None:
         key="shap_model_select",
     )
 
-    output_names = ["Carbonation Depth (mm)", "Cube Compressive Strength (MPa)"]
-    selected_target = st.selectbox(
-        "Select Target Variable to Analyze:",
-        output_names,
-        key="shap_target_select",
-    )
-
-    render_global_shap_plots(selected_shap_model, selected_target)
+    render_global_shap_plots(selected_shap_model, checkpoints_dir)

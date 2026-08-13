@@ -15,7 +15,9 @@ def init_session_state() -> None:
         "super_p": 0.65,
         "carbon_conc": 5.2,
         "exp_time": 208.0,
+        "compressive_str": 45.0,
         "predicted": False,
+        "feature_mode": "9 Variables (All)",
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -24,24 +26,29 @@ def init_session_state() -> None:
 
 def get_input_array() -> np.ndarray:
     """Get the current inputs from session state as a NumPy array."""
-    return np.array(
-        [
-            [
-                st.session_state["water_abs"],
-                st.session_state["w_b_ratio"],
-                st.session_state["fine_agg"],
-                st.session_state["gravel"],
-                st.session_state["ra_content"],
-                st.session_state["super_p"],
-                st.session_state["carbon_conc"],
-                st.session_state["exp_time"],
-            ]
-        ]
-    )
+    inputs = [
+        st.session_state["water_abs"],
+        st.session_state["w_b_ratio"],
+        st.session_state["fine_agg"],
+        st.session_state["gravel"],
+        st.session_state["ra_content"],
+        st.session_state["super_p"],
+        st.session_state["carbon_conc"],
+    ]
+    if st.session_state["feature_mode"] == "9 Variables (All)":
+        inputs.append(st.session_state["exp_time"])
+        inputs.append(st.session_state["compressive_str"])
+    return np.array([inputs])
 
 
 def _render_input_fields(container) -> None:
-    """Render the 8 numeric input fields within a specific container (e.g. st or col)."""
+    """Render the 9 numeric input fields within a specific container (e.g. st or col)."""
+    container.radio(
+        "Feature Mode",
+        options=["9 Variables (All)", "7 Variables (Exclude Time & Strength)"],
+        key="feature_mode",
+        help="Select whether to include Exposure Time and Compressive Strength as inputs."
+    )
     container.number_input(
         "Water absorption (%) [0.0 - 16.58]",
         min_value=0.0,
@@ -98,19 +105,36 @@ def _render_input_fields(container) -> None:
         key="carbon_conc",
         help="CO2 concentration during the carbonation testing.",
     )
-    container.number_input(
-        "Exposure time (days) [7.0 - 3650.0]",
-        min_value=7.0,
-        max_value=3650.0,
-        step=1.0,
-        key="exp_time",
-        help="Duration of concrete exposure to CO2 in days.",
-    )
+    if st.session_state["feature_mode"] == "9 Variables (All)":
+        container.number_input(
+            "Exposure time (days) [7.0 - 3650.0]",
+            min_value=7.0,
+            max_value=3650.0,
+            step=1.0,
+            key="exp_time",
+            help="Duration of concrete exposure to CO2 in days.",
+        )
+        container.number_input(
+            "Compressive strength (MPa) [15.0 - 90.0]",
+            min_value=15.0,
+            max_value=90.0,
+            step=1.0,
+            key="compressive_str",
+            help="Compressive strength of the concrete.",
+        )
 
 
 def render_home_inputs() -> None:
     """Render the inputs in a 2x4 grid on the home screen."""
     st.markdown("### Mix Proportions & Exposure Conditions")
+    
+    st.radio(
+        "Feature Mode",
+        options=["9 Variables (All)", "7 Variables (Exclude Time & Strength)"],
+        key="feature_mode",
+        horizontal=True,
+        help="Select whether to include Exposure Time and Compressive Strength as inputs."
+    )
     
     # Create a 4-column layout for the first row of inputs
     col1, col2, col3, col4 = st.columns(4)
@@ -120,12 +144,15 @@ def render_home_inputs() -> None:
     with col2:
         st.number_input("Effective w/b ratio [0.25 - 1.02]", min_value=0.25, max_value=1.02, step=0.01, key="w_b_ratio")
         st.number_input("Superplasticizer (kg/m³) [0.0 - 7.31]", min_value=0.0, max_value=7.31, step=0.05, key="super_p")
+        if st.session_state["feature_mode"] == "9 Variables (All)":
+            st.number_input("Compressive strength (MPa) [15.0 - 90.0]", min_value=15.0, max_value=90.0, step=1.0, key="compressive_str")
     with col3:
         st.number_input("Fine aggregate (kg/m³) [357.65 - 998.0]", min_value=357.65, max_value=998.0, step=1.0, key="fine_agg")
         st.number_input("Carbon concentration (%) [0.05 - 50.0]", min_value=0.05, max_value=50.0, step=0.1, key="carbon_conc")
     with col4:
         st.number_input("Gravel content (kg/m³) [0.0 - 689.0]", min_value=0.0, max_value=689.0, step=1.0, key="gravel")
-        st.number_input("Exposure time (days) [7.0 - 3650.0]", min_value=7.0, max_value=3650.0, step=1.0, key="exp_time")
+        if st.session_state["feature_mode"] == "9 Variables (All)":
+            st.number_input("Exposure time (days) [7.0 - 3650.0]", min_value=7.0, max_value=3650.0, step=1.0, key="exp_time")
 
 
 def render_sidebar_inputs() -> None:
@@ -145,8 +172,11 @@ def check_validation() -> tuple[bool, list[str]]:
         "ra_content": (0.0, 357.8, "RA content"),
         "super_p": (0.0, 7.31, "Superplasticizer"),
         "carbon_conc": (0.05, 50.0, "Carbon concentration"),
-        "exp_time": (7.0, 3650.0, "Exposure time"),
     }
+    
+    if st.session_state["feature_mode"] == "9 Variables (All)":
+        ranges["exp_time"] = (7.0, 3650.0, "Exposure time")
+        ranges["compressive_str"] = (15.0, 90.0, "Compressive strength")
     
     valid = True
     errors = []
