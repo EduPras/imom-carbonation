@@ -10,7 +10,7 @@
 ---
 
 <details open>
-<summary><b>Table of Contents / Sumário</b> (Click to expand/collapse)</summary>
+<summary><b>Table of Contents</b> (Click to expand/collapse)</summary>
 
 - [Motivation](#motivation)
 - [Dataset](#dataset)
